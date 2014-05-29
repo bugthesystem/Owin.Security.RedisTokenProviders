@@ -1,4 +1,4 @@
-Microsoft.Owin.Security.Infrastructure.RedisRefreshTokenProvider
+RedisRefreshTokenProvider
 ================================================================
 
 A RefreshTokenProvider using Redis as token store.
