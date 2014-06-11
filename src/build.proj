@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+
+<!--EXTERNAL_PROPERTIES: MSBuildThisFileDirectory-->
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <Target Name="Build">
+    <!--FX 4.5 START-->
+    <MSBuild Projects=".\Owin.Security.RedisTokenProviders\Owin.Security.RedisTokenProviders.csproj"
+             Properties="Configuration=Release;OutputPath=$(MSBuildThisFileDirectory)BuildArtifacts\Owin.Security.RedisTokenProviders\bin\net45;
+			 IntermediateOutputPath=$(MSBuildThisFileDirectory)BuildArtifacts\Owin.Security.RedisTokenProviders\obj\net45\;TargetFrameworkVersion=v4.5" />
+    <!--FX 4.5 END-->
+    <!--FX 4.5.1 START-->
+    <MSBuild Projects=".\Owin.Security.RedisTokenProviders\Owin.Security.RedisTokenProviders.csproj"
+             Properties="Configuration=Release;OutputPath=$(MSBuildThisFileDirectory)BuildArtifacts\Owin.Security.RedisTokenProviders\bin\net451;
+			 IntermediateOutputPath=$(MSBuildThisFileDirectory)BuildArtifacts\Owin.Security.RedisTokenProviders\obj\net451\;TargetFrameworkVersion=v4.5.1" />
+   <!--FX 4.5.1 END-->
+  </Target>
+  
+</Project>

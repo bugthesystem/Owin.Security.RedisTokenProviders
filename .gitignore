@@ -6,6 +6,7 @@
 [Pp]ackages/
 # BuildArtifacts folder
 [Bb]uildArtifacts/
+*.nupkg
 
 # mstest test results
 TestResults

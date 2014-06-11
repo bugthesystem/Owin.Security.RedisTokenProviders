@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+    <metadata>
+        <id>Owin.Security.RedisTokenProviders</id>
+        <version>0.1.0</version>
+        <authors>ziyasal</authors>
+        <owners>ziyasal</owners>
+        <projectUrl>https://github.com/ziyasal/Owin.Security.RedisTokenProviders</projectUrl>
+        <requireLicenseAcceptance>false</requireLicenseAcceptance>
+        <description>A RefreshTokenProvider using Redis as token store for Microsoft.Owin </description>
+        <summary>A RefreshTokenProvider using Redis as token store for Microsoft.Owin </summary>
+        <tags>oauth refresh_token identity redis aspnetmvc webapi</tags>
+        <dependencies>
+            <dependency id="Microsoft.Owin.Security" version="2.1.0" />
+            <dependency id="StackExchange.Redis" version="1.0.297" />
+        </dependencies>
+    </metadata>
+    <files>
+        <file src="..\BuildArtifacts\Owin.Security.RedisTokenProviders\bin\net45\Owin.Security.RedisTokenProviders.dll" target="lib\net45\Owin.Security.RedisTokenProviders.dll" />
+        <file src="..\BuildArtifacts\Owin.Security.RedisTokenProviders\bin\net451\Owin.Security.RedisTokenProviders.dll" target="lib\net451\Owin.Security.RedisTokenProviders.dll" />
+    </files>
+</package>
