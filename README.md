@@ -3,7 +3,7 @@ OAuth.RedisRefreshTokenProvider
 
 A RefreshTokenProvider using Redis as token store.
 
-To install Owin.Security.RedisTokenProviders,
+**To install Owin.Security.RedisTokenProviders**
 
 ```csharp
 Install-Package Owin.Security.RedisTokenProviders
