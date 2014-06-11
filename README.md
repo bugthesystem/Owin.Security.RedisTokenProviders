@@ -4,7 +4,8 @@ OAuth.RedisRefreshTokenProvider
 A RefreshTokenProvider using Redis as token store.
 
 
-Set RefreshTokenProvider property of OAuthAuthorizationServerOptions
+**Set RefreshTokenProvider property of OAuthAuthorizationServerOptions**
+
 ```csharp
 
  OAuthOptions = new OAuthAuthorizationServerOptions
