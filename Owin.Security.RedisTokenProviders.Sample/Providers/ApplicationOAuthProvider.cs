@@ -28,13 +28,12 @@ namespace Owin.Security.RedisTokenProviders.Sample.Providers
         {
             var userManager = context.OwinContext.GetUserManager<ApplicationUserManager>();
 
-            ApplicationUser user = await userManager.FindAsync(context.UserName, context.Password);
-
-            if (user == null)
+            ApplicationUser user = new ApplicationUser
             {
-                context.SetError("invalid_grant", "The user name or password is incorrect.");
-                return;
-            }
+                Email = "username@user.com",
+                PasswordHash = "password"
+            };
+
 
             ClaimsIdentity oAuthIdentity = await user.GenerateUserIdentityAsync(userManager,
                OAuthDefaults.AuthenticationType);

@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.Owin.Security;
 using Microsoft.Owin.Security.DataHandler.Serializer;
 using Microsoft.Owin.Security.Infrastructure;
+using Microsoft.Owin.Security.Provider;
 using StackExchange.Redis;
 
 namespace Owin.Security.RedisTokenProviders
@@ -11,25 +12,30 @@ namespace Owin.Security.RedisTokenProviders
     {
         private readonly IProviderConfiguration _configuration;
         private readonly ConnectionMultiplexer _redis;
+        public Func<BaseContext, string> StoreKeyFunc { get; set; }
 
         public RedisRefreshTokenProvider(IProviderConfiguration configuration)
         {
-            _configuration = configuration ?? new ProviderConfiguration { ConnectionString = "localhost:6379", ExpiresUtc = DateTime.UtcNow.AddYears(1), Db=0 };
+            _configuration = configuration ?? new ProviderConfiguration { ConnectionString = "localhost:6379", ExpiresUtc = DateTime.UtcNow.AddYears(1), Db = 0 };
             _redis = ConnectionMultiplexer.Connect(_configuration.ConnectionString);
         }
 
         public async Task CreateAsync(AuthenticationTokenCreateContext context)
         {
             var refreshToken = Guid.NewGuid().ToString();
+            StoreKeyFunc = StoreKeyFunc ?? (createContext => refreshToken);
 
             var refreshTokenProperties = new AuthenticationProperties(context.Ticket.Properties.Dictionary)
             {
                 IssuedUtc = context.Ticket.Properties.IssuedUtc,
                 ExpiresUtc = _configuration.ExpiresUtc
             };
+
             var refreshTokenTicket = new AuthenticationTicket(context.Ticket.Identity, refreshTokenProperties);
 
-            await StoreAsync(refreshToken, refreshTokenTicket);
+            var key = StoreKeyFunc(context);
+
+            await StoreAsync(key, refreshTokenTicket);
 
             context.SetToken(refreshToken);
         }
@@ -46,15 +52,20 @@ namespace Owin.Security.RedisTokenProviders
         public void Create(AuthenticationTokenCreateContext context)
         {
             var refreshToken = Guid.NewGuid().ToString();
+            StoreKeyFunc = StoreKeyFunc ?? (createContext => refreshToken);
 
             var refreshTokenProperties = new AuthenticationProperties(context.Ticket.Properties.Dictionary)
             {
                 IssuedUtc = context.Ticket.Properties.IssuedUtc,
                 ExpiresUtc = _configuration.ExpiresUtc
             };
+
             var refreshTokenTicket = new AuthenticationTicket(context.Ticket.Identity, refreshTokenProperties);
 
-            Store(refreshToken, refreshTokenTicket);
+            var key = StoreKeyFunc(context);
+
+            Store(key, refreshTokenTicket);
+
             context.SetToken(refreshToken);
         }
 
@@ -71,13 +82,18 @@ namespace Owin.Security.RedisTokenProviders
         {
             TicketResult result = new TicketResult();
 
+            StoreKeyFunc = StoreKeyFunc ?? (createContext => context.Token);
+            string key = StoreKeyFunc(context);
+
+
             IDatabase database = _redis.GetDatabase(_configuration.Db);
-            byte[] ticket = await database.StringGetAsync(context.Token);
+            byte[] ticket = await database.StringGetAsync(key);
+
             if (ticket != null)
             {
                 TicketSerializer serializer = new TicketSerializer();
                 result.Ticket = serializer.Deserialize(ticket);
-                result.Deleted = await database.KeyDeleteAsync(context.Token);
+                result.Deleted = await database.KeyDeleteAsync(key);
             }
             else
             {
@@ -91,14 +107,18 @@ namespace Owin.Security.RedisTokenProviders
         {
             TicketResult result = new TicketResult();
 
+            StoreKeyFunc = StoreKeyFunc ?? (createContext => context.Token);
+            string key = StoreKeyFunc(context);
+
             IDatabase database = _redis.GetDatabase(_configuration.Db);
-            byte[] ticket = database.StringGet(context.Token);
+            byte[] ticket = database.StringGet(key);
+
 
             if (ticket.Length > default(int))
             {
                 TicketSerializer serializer = new TicketSerializer();
                 result.Ticket = serializer.Deserialize(ticket);
-                result.Deleted = database.KeyDelete(context.Token);
+                result.Deleted = database.KeyDelete(key);
             }
 
             return result;
