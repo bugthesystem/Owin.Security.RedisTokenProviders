@@ -14,7 +14,7 @@ namespace Owin.Security.RedisTokenProviders
 
         public RedisRefreshTokenProvider(IProviderConfiguration configuration)
         {
-            _configuration = configuration ?? new ProviderConfiguration { ConnectionString = "localhost:6379;defaultDatabase=0", ExpiresUtc = DateTime.UtcNow.AddYears(1), Db=0 };
+            _configuration = configuration ?? new ProviderConfiguration { ConnectionString = "localhost:6379", ExpiresUtc = DateTime.UtcNow.AddYears(1), Db=0 };
         }
 
         public async Task CreateAsync(AuthenticationTokenCreateContext context)
