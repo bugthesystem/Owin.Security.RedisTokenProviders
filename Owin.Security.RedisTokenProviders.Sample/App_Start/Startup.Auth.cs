@@ -37,10 +37,9 @@ namespace Owin.Security.RedisTokenProviders.Sample
                 AllowInsecureHttp = true,
                 RefreshTokenProvider = new RedisRefreshTokenProvider(new ProviderConfiguration
                 {
-                    Db = 0,
+                    ConnectionString = "localhost:6379;defaultDatabase=0",
                     ExpiresUtc = DateTime.UtcNow.AddYears(1),
-                    Port = 6379,
-                    Host = "localhost"
+                    Db = 15
                 })
             };
 

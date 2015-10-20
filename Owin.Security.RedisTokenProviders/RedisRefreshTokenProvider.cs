@@ -14,15 +14,13 @@ namespace Owin.Security.RedisTokenProviders
 
         public RedisRefreshTokenProvider(IProviderConfiguration configuration)
         {
-            _configuration = configuration ?? new ProviderConfiguration { Host = "localhost:", Port = 6379, ExpiresUtc = DateTime.UtcNow.AddYears(1), Db = 0 };
+            _configuration = configuration ?? new ProviderConfiguration { ConnectionString = "localhost:6379;defaultDatabase=0", ExpiresUtc = DateTime.UtcNow.AddYears(1), Db=0 };
         }
 
         public async Task CreateAsync(AuthenticationTokenCreateContext context)
         {
             var refreshToken = Guid.NewGuid().ToString();
 
-            // maybe only create a handle the first time, then re-use for same client
-            // copy properties and set the desired lifetime of refresh token
             var refreshTokenProperties = new AuthenticationProperties(context.Ticket.Properties.Dictionary)
             {
                 IssuedUtc = context.Ticket.Properties.IssuedUtc,
@@ -73,7 +71,7 @@ namespace Owin.Security.RedisTokenProviders
         private async Task<TicketResult> RemoveAsync(AuthenticationTokenReceiveContext context)
         {
             TicketResult result = new TicketResult();
-            _redis = await ConnectionMultiplexer.ConnectAsync(string.Format("{0}:{1}", _configuration.Host, _configuration.Port));
+            _redis = await ConnectionMultiplexer.ConnectAsync(_configuration.ConnectionString);
             IDatabase database = _redis.GetDatabase(_configuration.Db);
             byte[] ticket = await database.StringGetAsync(context.Token);
             if (ticket != null)
@@ -93,7 +91,7 @@ namespace Owin.Security.RedisTokenProviders
         private TicketResult Remove(AuthenticationTokenReceiveContext context)
         {
             TicketResult result = new TicketResult();
-            _redis = ConnectionMultiplexer.Connect(string.Format("{0}:{1}", _configuration.Host, _configuration.Port));
+            _redis = ConnectionMultiplexer.Connect(_configuration.ConnectionString);
             IDatabase database = _redis.GetDatabase(_configuration.Db);
             byte[] ticket = database.StringGet(context.Token);
 
@@ -111,7 +109,7 @@ namespace Owin.Security.RedisTokenProviders
         {
             TicketSerializer serializer = new TicketSerializer();
             byte[] serialize = serializer.Serialize(ticket);
-            _redis = await ConnectionMultiplexer.ConnectAsync(string.Format("{0}:{1}", _configuration.Host, _configuration.Port));
+            _redis = await ConnectionMultiplexer.ConnectAsync(_configuration.ConnectionString);
             IDatabase database = _redis.GetDatabase(_configuration.Db);
             await database.StringSetAsync(guid, serialize);
         }
@@ -120,7 +118,7 @@ namespace Owin.Security.RedisTokenProviders
         {
             TicketSerializer serializer = new TicketSerializer();
             byte[] serialize = serializer.Serialize(ticket);
-            _redis = ConnectionMultiplexer.Connect(string.Format("{0}:{1}", _configuration.Host, _configuration.Port));
+            _redis = ConnectionMultiplexer.Connect(_configuration.ConnectionString);
             IDatabase database = _redis.GetDatabase(_configuration.Db);
             database.StringSet(guid, serialize);
         }
