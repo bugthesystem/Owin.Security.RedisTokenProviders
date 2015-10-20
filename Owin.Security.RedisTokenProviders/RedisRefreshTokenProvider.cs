@@ -12,7 +12,7 @@ namespace Owin.Security.RedisTokenProviders
     {
         private readonly IProviderConfiguration _configuration;
         private readonly ConnectionMultiplexer _redis;
-        public Func<BaseContext, string> StoreKeyFunc { get; set; }
+        public Func<AuthenticationTicket, string, string> StoreKeyFunc { get; set; }
 
         public RedisRefreshTokenProvider(IProviderConfiguration configuration)
         {
@@ -23,7 +23,7 @@ namespace Owin.Security.RedisTokenProviders
         public async Task CreateAsync(AuthenticationTokenCreateContext context)
         {
             var refreshToken = Guid.NewGuid().ToString();
-            StoreKeyFunc = StoreKeyFunc ?? (createContext => refreshToken);
+            StoreKeyFunc = StoreKeyFunc ?? ((ctx, token) => token);
 
             var refreshTokenProperties = new AuthenticationProperties(context.Ticket.Properties.Dictionary)
             {
@@ -33,7 +33,7 @@ namespace Owin.Security.RedisTokenProviders
 
             var refreshTokenTicket = new AuthenticationTicket(context.Ticket.Identity, refreshTokenProperties);
 
-            var key = StoreKeyFunc(context);
+            var key = StoreKeyFunc(context.Ticket, refreshToken);
 
             await StoreAsync(key, refreshTokenTicket);
 
@@ -52,7 +52,7 @@ namespace Owin.Security.RedisTokenProviders
         public void Create(AuthenticationTokenCreateContext context)
         {
             var refreshToken = Guid.NewGuid().ToString();
-            StoreKeyFunc = StoreKeyFunc ?? (createContext => refreshToken);
+            StoreKeyFunc = StoreKeyFunc ?? ((ctx, token) => token);
 
             var refreshTokenProperties = new AuthenticationProperties(context.Ticket.Properties.Dictionary)
             {
@@ -62,7 +62,7 @@ namespace Owin.Security.RedisTokenProviders
 
             var refreshTokenTicket = new AuthenticationTicket(context.Ticket.Identity, refreshTokenProperties);
 
-            var key = StoreKeyFunc(context);
+            var key = StoreKeyFunc(context.Ticket, refreshToken);
 
             Store(key, refreshTokenTicket);
 
@@ -82,8 +82,8 @@ namespace Owin.Security.RedisTokenProviders
         {
             TicketResult result = new TicketResult();
 
-            StoreKeyFunc = StoreKeyFunc ?? (createContext => context.Token);
-            string key = StoreKeyFunc(context);
+            StoreKeyFunc = StoreKeyFunc ?? ((ctx, token) => token);
+            string key = StoreKeyFunc(context.Ticket, context.Token);
 
 
             IDatabase database = _redis.GetDatabase(_configuration.Db);
@@ -107,8 +107,8 @@ namespace Owin.Security.RedisTokenProviders
         {
             TicketResult result = new TicketResult();
 
-            StoreKeyFunc = StoreKeyFunc ?? (createContext => context.Token);
-            string key = StoreKeyFunc(context);
+            StoreKeyFunc = StoreKeyFunc ?? ((ctx, token) => token);
+            string key = StoreKeyFunc(context.Ticket, context.Token);
 
             IDatabase database = _redis.GetDatabase(_configuration.Db);
             byte[] ticket = database.StringGet(key);
