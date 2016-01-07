@@ -130,7 +130,7 @@ namespace Owin.Security.RedisTokenProviders
             byte[] serialize = serializer.Serialize(ticket);
 
             IDatabase database = _redis.GetDatabase(_configuration.Db);
-            await database.StringSetAsync(guid, serialize);
+            await database.StringSetAsync(guid, serialize, _configuration.ExpiresUtc.TimeOfDay);
         }
 
         private void Store(string guid, AuthenticationTicket ticket)
@@ -139,7 +139,7 @@ namespace Owin.Security.RedisTokenProviders
             byte[] serialize = serializer.Serialize(ticket);
 
             IDatabase database = _redis.GetDatabase(_configuration.Db);
-            database.StringSet(guid, serialize);
+            database.StringSet(guid, serialize, _configuration.ExpiresUtc.TimeOfDay);
         }
     }
 }
