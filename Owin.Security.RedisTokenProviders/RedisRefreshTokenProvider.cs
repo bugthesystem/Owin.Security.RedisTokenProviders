@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using Microsoft.Owin.Security;
 using Microsoft.Owin.Security.DataHandler.Serializer;
 using Microsoft.Owin.Security.Infrastructure;
-using Microsoft.Owin.Security.Provider;
 using StackExchange.Redis;
 
 namespace Owin.Security.RedisTokenProviders
@@ -19,7 +18,6 @@ namespace Owin.Security.RedisTokenProviders
             _configuration = configuration ?? new ProviderConfiguration { ConnectionString = "localhost:6379", ExpiresUtc = DateTime.UtcNow.AddYears(1), Db = 0 , AbortOnConnectFail = true};
 
             var options = ConfigurationOptions.Parse(_configuration.ConnectionString);
-            options.DefaultDatabase = _configuration.Db;
             options.AbortOnConnectFail = _configuration.AbortOnConnectFail;
 
             _redis = ConnectionMultiplexer.Connect(options);
