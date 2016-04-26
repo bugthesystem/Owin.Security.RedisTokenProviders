@@ -23,7 +23,8 @@ Install-Package Owin.Security.RedisTokenProviders
        Db = 0,
        ExpiresUtc = DateTime.UtcNow.AddYears(1),
        Port = 6379,
-       Host = "localhost"
+       Host = "localhost",
+       AbortOnConnectFail =true //Optional (default:true)
     })
  };
 
