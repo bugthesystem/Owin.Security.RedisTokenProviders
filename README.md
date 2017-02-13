@@ -13,7 +13,6 @@ Install-Package Owin.Security.RedisTokenProviders
 **Set RefreshTokenProvider property of OAuthAuthorizationServerOptions**
 
 ```csharp
-
  OAuthOptions = new OAuthAuthorizationServerOptions
  {
     //Other configurations
@@ -26,6 +25,10 @@ Install-Package Owin.Security.RedisTokenProviders
        Host = "localhost",
        AbortOnConnectFail =true //Optional (default:true)
     })
+    {
+       RedisKeyGenerator = (authenticationTicket, token) => token, // Optional
+       RefreshTokenGenerator = () => new Guid().ToString()         // Optional
+    }
  };
 
 ```
