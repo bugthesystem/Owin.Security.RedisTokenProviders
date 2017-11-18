@@ -12,7 +12,7 @@
         <tags>oauth refresh_token identity redis aspnetmvc webapi</tags>
         <dependencies>
             <dependency id="Microsoft.Owin.Security" version="2.1.0" />
-            <dependency id="StackExchange.Redis" version="1.0.488" />
+            <dependency id="StackExchange.Redis" version="1.2.6" />
         </dependencies>
     </metadata>
     <files>
