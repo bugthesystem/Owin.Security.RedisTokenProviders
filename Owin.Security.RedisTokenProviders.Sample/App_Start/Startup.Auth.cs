@@ -3,6 +3,7 @@ using Microsoft.AspNet.Identity;
 using Microsoft.Owin;
 using Microsoft.Owin.Security.Cookies;
 using Microsoft.Owin.Security.OAuth;
+using Microsoft.Owin.Security.Provider;
 using Owin.Security.RedisTokenProviders.Sample.Models;
 using Owin.Security.RedisTokenProviders.Sample.Providers;
 
@@ -42,6 +43,10 @@ namespace Owin.Security.RedisTokenProviders.Sample
                     Db = 15,
                     AbortOnConnectFail = false
                 })
+                {
+                    RedisKeyGenerator = (authenticationTicket, token) => token,
+                    RefreshTokenGenerator = () => new Guid().ToString()
+                }
             };
 
             // Enable the application to use bearer tokens to authenticate users

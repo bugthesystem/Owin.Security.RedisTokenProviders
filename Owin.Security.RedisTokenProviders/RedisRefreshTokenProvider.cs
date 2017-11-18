@@ -10,23 +10,38 @@ namespace Owin.Security.RedisTokenProviders
     public class RedisRefreshTokenProvider : IAuthenticationTokenProvider
     {
         private readonly IProviderConfiguration _configuration;
-        private readonly ConnectionMultiplexer _redis;
+        private readonly Lazy<IConnectionMultiplexer> _multiplexer;
+
+        [Obsolete("Renamed to RedisKeyGenerator, use it instead", true)]
         public Func<AuthenticationTicket, string, string> StoreKeyFunc { get; set; }
+
+        public Func<AuthenticationTicket, string, string> RedisKeyGenerator { get; set; }
+        public Func<string> RefreshTokenGenerator { get; set; }
+
+        private IDatabase Db => _multiplexer.Value.GetDatabase(_configuration.Db);
 
         public RedisRefreshTokenProvider(IProviderConfiguration configuration)
         {
-            _configuration = configuration ?? new ProviderConfiguration { ConnectionString = "localhost:6379", ExpiresUtc = DateTime.UtcNow.AddYears(1), Db = 0 , AbortOnConnectFail = true};
+            _configuration = configuration ?? new ProviderConfiguration
+            {
+                ConnectionString = "localhost:6379",
+                ExpiresUtc = DateTime.UtcNow.AddYears(1),
+                Db = 0,
+                AbortOnConnectFail = true
+            };
 
             var options = ConfigurationOptions.Parse(_configuration.ConnectionString);
             options.AbortOnConnectFail = _configuration.AbortOnConnectFail;
 
-            _redis = ConnectionMultiplexer.Connect(options);
+            _multiplexer = new Lazy<IConnectionMultiplexer>(() => ConnectionMultiplexer.Connect(options));
+
         }
 
         public async Task CreateAsync(AuthenticationTokenCreateContext context)
         {
-            var refreshToken = Guid.NewGuid().ToString();
-            StoreKeyFunc = StoreKeyFunc ?? ((ctx, token) => token);
+            RefreshTokenGenerator = RefreshTokenGenerator ?? (() => Guid.NewGuid().ToString());
+            var refreshToken = RefreshTokenGenerator();
+            RedisKeyGenerator = RedisKeyGenerator ?? ((ctx, token) => token);
 
             var refreshTokenProperties = new AuthenticationProperties(context.Ticket.Properties.Dictionary)
             {
@@ -36,7 +51,7 @@ namespace Owin.Security.RedisTokenProviders
 
             var refreshTokenTicket = new AuthenticationTicket(context.Ticket.Identity, refreshTokenProperties);
 
-            var key = StoreKeyFunc(context.Ticket, refreshToken);
+            var key = RedisKeyGenerator(context.Ticket, refreshToken);
 
             await StoreAsync(key, refreshTokenTicket);
 
@@ -55,7 +70,7 @@ namespace Owin.Security.RedisTokenProviders
         public void Create(AuthenticationTokenCreateContext context)
         {
             var refreshToken = Guid.NewGuid().ToString();
-            StoreKeyFunc = StoreKeyFunc ?? ((ctx, token) => token);
+            RedisKeyGenerator = RedisKeyGenerator ?? ((ctx, token) => token);
 
             var refreshTokenProperties = new AuthenticationProperties(context.Ticket.Properties.Dictionary)
             {
@@ -65,7 +80,7 @@ namespace Owin.Security.RedisTokenProviders
 
             var refreshTokenTicket = new AuthenticationTicket(context.Ticket.Identity, refreshTokenProperties);
 
-            var key = StoreKeyFunc(context.Ticket, refreshToken);
+            var key = RedisKeyGenerator(context.Ticket, refreshToken);
 
             Store(key, refreshTokenTicket);
 
@@ -85,22 +100,20 @@ namespace Owin.Security.RedisTokenProviders
         {
             TicketResult result = new TicketResult();
 
-            StoreKeyFunc = StoreKeyFunc ?? ((ctx, token) => token);
-            string key = StoreKeyFunc(context.Ticket, context.Token);
+            RedisKeyGenerator = RedisKeyGenerator ?? ((ctx, token) => token);
+            string key = RedisKeyGenerator(context.Ticket, context.Token);
 
-
-            IDatabase database = _redis.GetDatabase(_configuration.Db);
-            byte[] ticket = await database.StringGetAsync(key);
+            byte[] ticket = await Db.StringGetAsync(key);
 
             if (ticket != null)
             {
                 TicketSerializer serializer = new TicketSerializer();
                 result.Ticket = serializer.Deserialize(ticket);
-                result.Deleted = await database.KeyDeleteAsync(key);
+                result.Deleted = await Db.KeyDeleteAsync(key);
             }
             else
             {
-                await database.KeyDeleteAsync(context.Token);
+                await Db.KeyDeleteAsync(context.Token);
             }
 
             return result;
@@ -110,18 +123,17 @@ namespace Owin.Security.RedisTokenProviders
         {
             TicketResult result = new TicketResult();
 
-            StoreKeyFunc = StoreKeyFunc ?? ((ctx, token) => token);
-            string key = StoreKeyFunc(context.Ticket, context.Token);
+            RedisKeyGenerator = RedisKeyGenerator ?? ((ctx, token) => token);
+            string key = RedisKeyGenerator(context.Ticket, context.Token);
 
-            IDatabase database = _redis.GetDatabase(_configuration.Db);
-            byte[] ticket = database.StringGet(key);
+            byte[] ticket = Db.StringGet(key);
 
 
             if (ticket.Length > default(int))
             {
                 TicketSerializer serializer = new TicketSerializer();
                 result.Ticket = serializer.Deserialize(ticket);
-                result.Deleted = database.KeyDelete(key);
+                result.Deleted = Db.KeyDelete(key);
             }
 
             return result;
@@ -132,8 +144,7 @@ namespace Owin.Security.RedisTokenProviders
             TicketSerializer serializer = new TicketSerializer();
             byte[] serialize = serializer.Serialize(ticket);
 
-            IDatabase database = _redis.GetDatabase(_configuration.Db);
-            await database.StringSetAsync(guid, serialize, new TimeSpan(_configuration.ExpiresUtc.Ticks));
+            await Db.StringSetAsync(guid, serialize, new TimeSpan(_configuration.ExpiresUtc.Ticks));
         }
 
         private void Store(string guid, AuthenticationTicket ticket)
@@ -141,8 +152,7 @@ namespace Owin.Security.RedisTokenProviders
             TicketSerializer serializer = new TicketSerializer();
             byte[] serialize = serializer.Serialize(ticket);
 
-            IDatabase database = _redis.GetDatabase(_configuration.Db);
-            database.StringSet(guid, serialize, new TimeSpan(_configuration.ExpiresUtc.Ticks));
+            Db.StringSet(guid, serialize, new TimeSpan(_configuration.ExpiresUtc.Ticks));
         }
     }
 }
