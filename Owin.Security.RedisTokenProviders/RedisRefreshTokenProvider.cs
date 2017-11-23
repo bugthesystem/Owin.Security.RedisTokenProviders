@@ -144,7 +144,7 @@ namespace Owin.Security.RedisTokenProviders
             TicketSerializer serializer = new TicketSerializer();
             byte[] serialize = serializer.Serialize(ticket);
 
-            await Db.StringSetAsync(guid, serialize, _configuration.ExpiresUtc - DateTimeOffset.UtcNow);
+            await Db.StringSetAsync(guid, serialize, GetExpiresUtc());
         }
 
         private void Store(string guid, AuthenticationTicket ticket)
@@ -152,7 +152,20 @@ namespace Owin.Security.RedisTokenProviders
             TicketSerializer serializer = new TicketSerializer();
             byte[] serialize = serializer.Serialize(ticket);
 
-            Db.StringSet(guid, serialize, _configuration.ExpiresUtc - DateTimeOffset.UtcNow);
+            Db.StringSet(guid, serialize, GetExpiresUtc());
+        }
+
+        private TimeSpan GetExpiresUtc()
+        {
+            TimeSpan result = _configuration.ExpiresUtc - DateTimeOffset.UtcNow;
+
+            if (_configuration.MaxExpireDurationInMinutes > default(int) && 
+                result.TotalMinutes > _configuration.MaxExpireDurationInMinutes)
+            {
+                result = new TimeSpan(0, _configuration.MaxExpireDurationInMinutes, 0);
+            }
+
+            return result;
         }
     }
 }
