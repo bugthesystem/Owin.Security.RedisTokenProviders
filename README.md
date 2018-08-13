@@ -27,7 +27,7 @@ Install-Package Owin.Security.RedisTokenProviders
     })
     {
        RedisKeyGenerator = (authenticationTicket, token) => token, // Optional
-       RefreshTokenGenerator = () => new Guid().ToString()         // Optional
+       RefreshTokenGenerator = () => Guid.NewGuid().ToString()         // Optional
     }
  };
 
