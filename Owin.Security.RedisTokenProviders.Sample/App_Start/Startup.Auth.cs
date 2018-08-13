@@ -45,7 +45,7 @@ namespace Owin.Security.RedisTokenProviders.Sample
                 })
                 {
                     RedisKeyGenerator = (authenticationTicket, token) => token,
-                    RefreshTokenGenerator = () => new Guid().ToString()
+                    RefreshTokenGenerator = () => Guid.NewGuid().ToString()
                 }
             };
 
