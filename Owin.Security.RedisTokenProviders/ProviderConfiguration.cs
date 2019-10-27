@@ -8,5 +8,6 @@ namespace Owin.Security.RedisTokenProviders
         public DateTimeOffset ExpiresUtc { get; set; }
         public int Db { get; set; }
         public bool AbortOnConnectFail { get; set; }
+        public int MaxExpireDurationInMinutes { get; set; }
     }
 }
